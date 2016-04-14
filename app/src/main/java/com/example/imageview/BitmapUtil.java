@@ -64,7 +64,8 @@ public class BitmapUtil {
 	private static int MB = 1024 * 1024;
 	public final static String DIR = "/sdcard/hypers";
 
-	public static void saveBmpToSd(Bitmap bm, String url, int quantity) {
+	public static void saveBmpToSd(Bitmap bm, String url, int quantity)
+	{
 
 		if (FREE_SD_SPACE_NEEDED_TO_CACHE > freeSpaceOnSd()) {
 			return;

@@ -8,12 +8,13 @@ import android.util.Log;
 public class DisplayUtil {
 	private static final String TAG = "DisplayUtil";
 
+	//设备独立像素转绝对像素
 	public static int dip2px(Context context, float dipValue){            
 		final float scale = context.getResources().getDisplayMetrics().density;                 
 		return (int)(dipValue * scale + 0.5f);
 	}     
 	
-
+	//绝对像素转设备独立像素
 	public static int px2dip(Context context, float pxValue){                
 		final float scale = context.getResources().getDisplayMetrics().density;                 
 		return (int)(pxValue / scale + 0.5f);         
