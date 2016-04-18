@@ -6,58 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "include/PerspectiveAdd.h"
-
-
-/*static const string picPath[] = {
-        "/mnt/obb/pic1/01.jpg",
-        "/mnt/obb/pic1/02.jpg",
-        "/mnt/obb/pic1/03.jpg",
-        "/mnt/obb/pic1/04.jpg",
-        "/mnt/obb/pic1/05.jpg",
-        "/mnt/obb/pic1/06.jpg",
-        "\0"
-};*/
-
-/*
-static const string picPath[] = {
-        "/mnt/obb/pic3/01.jpg",
-        "/mnt/obb/pic3/02.jpg",
-        "/mnt/obb/pic3/03.jpg",
-        "/mnt/obb/pic3/04.jpg",
-        "/mnt/obb/pic3/05.jpg",
-        "/mnt/obb/pic3/06.jpg",
-        "\0"
-};*/
-
-// final int w = 3264;
-//final int h = 2448;
-
-static const string picPath[] = {
-        "/mnt/obb/Capture/1.jpg",
-        "/mnt/obb/Capture/2.jpg",
-        "/mnt/obb/Capture/3.jpg",
-        "/mnt/obb/Capture/4.jpg",
-        "/mnt/obb/Capture/5.jpg",
-        "/mnt/obb/Capture/6.jpg",
-        "\0"
-};
-
-
-
-// final int w = 4160;
-//final int h = 3104;
-
-/*
-static const string picPath[] = {
-        "/mnt/obb/pic5/01.jpg",
-        "/mnt/obb/pic5/02.jpg",
-        "/mnt/obb/pic5/03.jpg",
-        "/mnt/obb/pic5/04.jpg",
-        "/mnt/obb/pic5/05.jpg",
-        "/mnt/obb/pic5/06.jpg",
-        "\0"
-};*/
-
+#include <dirent.h>
 
 
 static double work_begin = 0;
@@ -81,19 +30,56 @@ static vector <Mat> g_grayVec;
 
 static PerspectiveAdd g_APUnit;
 
-JNIEXPORT void JNICALL initOpenGLES(JNIEnv *env, jobject obj)
+JNIEXPORT void JNICALL initOpenGLES(JNIEnv *env, jobject obj,jcharArray path,jint length)
 {
     g_picVec.clear();
     g_grayVec.clear();
+    jchar *array;
+    char *buf;
+    int i;
+    array = env->GetCharArrayElements( path, NULL);//复制数组元素到array内存空间
+    if(array == NULL){
+        LOGE("initOpenGLES: GetCharArrayElements error.");
+    }
+    buf = (char *)calloc(length , sizeof(char));
+    //开辟jboolean类型的内存空间，jboolean对应的c++类型为unsigned char
+    if(buf == NULL){
+        LOGE("initOpenGLES: calloc error.");
+    }
+    for(i=0; i < length; i++){
+        //把jcharArray的数据元素复制到buf所指的内存空间
+        *(buf + i) = (char)(*(array + i));
+        //LOGD("buf[%d]=%c\n",i,*(buf+i));
+    }
+
+    char picPath[255];
+    int nameLength = sizeof("/0.jpg");
+    memset(picPath,0,sizeof(picPath));
+    memcpy(picPath,buf,length);
+
     for(int i = 0; i < 6; i++)
     {
+        switch(i)
+        {
+            case 0:memcpy(picPath+length,"/1.jpg",nameLength);break;
+            case 1:memcpy(picPath+length,"/2.jpg",nameLength);break;
+            case 2:memcpy(picPath+length,"/3.jpg",nameLength);break;
+            case 3:memcpy(picPath+length,"/4.jpg",nameLength);break;
+            case 4:memcpy(picPath+length,"/5.jpg",nameLength);break;
+            case 5:memcpy(picPath+length,"/6.jpg",nameLength);break;
+            default:break;
+        }
+        //LOGE("LOGE: path = %s \n",picPath);
         Mat temp;
-        temp = imread(picPath[i]);
+        temp = imread(picPath);
         g_picVec.push_back(temp);
         cvtColor(temp,temp,CV_RGB2GRAY);
         g_grayVec.push_back(temp);
     }
     g_APUnit.initOpenGLES(g_picVec,g_grayVec);
+    env->ReleaseCharArrayElements(path, array, 0);//释放资源
+    free(buf);//释放内存空间
+    buf = NULL;
 }
 
 JNIEXPORT jlong JNICALL processing(JNIEnv *env, jobject obj)
@@ -126,7 +112,7 @@ static const char *className = "com/example/linqi/my_jni/NdkUtils";
 //定义方法隐射关系
 static JNINativeMethod methods[] = {
         {"processing","()J",(void*)processing},
-        {"initOpenGLES","()V",(void*)initOpenGLES},
+        {"initOpenGLES","([CI)V",(void*)initOpenGLES},
 };
 
 jint JNI_OnLoad(JavaVM* vm, void* reserved)

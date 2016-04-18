@@ -16,7 +16,7 @@ public class NdkUtils {
     public native boolean gray(int[] dstImage,int w,int h);
     public native long processing();
     public native void grayImage(int[][] srcImage,int[] dstImage,int width,int height);
-    public native void initOpenGLES();
+    public native void initOpenGLES(char[] path,int length);
     public native long addPicture();
 
     static {

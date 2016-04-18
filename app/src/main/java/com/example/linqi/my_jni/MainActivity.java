@@ -4,10 +4,12 @@ package com.example.linqi.my_jni;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Process;
 import android.util.Log;
 import android.view.View;
@@ -18,9 +20,16 @@ import com.example.imageview.PinchImageView;
 
 import org.opencv.android.Utils;
 import org.opencv.core.Mat;
+import android.widget.Toast;
+
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 
 public class MainActivity extends Activity
 {
+    private static final  String TAG = "MainActivity";
     TextView mTextView;
     PinchImageView mOriImageView;
     PinchImageView mImageView;
@@ -29,7 +38,7 @@ public class MainActivity extends Activity
     Button mCaptureButton;
     Bitmap mFinalBitmap;
     Bitmap m_Tmpbmp;
-    boolean threadExist = false;
+    boolean mInitOpenGL = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -44,13 +53,21 @@ public class MainActivity extends Activity
         mTextView = (TextView) this.findViewById(R.id.text);
         mImageView = (PinchImageView) this.findViewById(R.id.imageView);
         mOriImageView = (PinchImageView) this.findViewById(R.id.imageView_ori);
-        m_Tmpbmp = BitmapFactory.decodeFile("/mnt/obb/Capture/3.jpg");
-        mOriImageView.setImageBitmap(m_Tmpbmp);
-        mFinalBitmap = Bitmap.createBitmap(m_Tmpbmp.getWidth() ,m_Tmpbmp.getHeight() ,Bitmap.Config.ARGB_8888);
+
+        mFinalBitmap = Bitmap.createBitmap(3264 ,2448 ,Bitmap.Config.ARGB_8888);
 
         mButton = (Button) this.findViewById(R.id.button);
+        mButton.setEnabled(false);
         mTextView.setText("addPicture Demo!");
         mCaptureButton = (Button)findViewById(R.id.capture_btn);
+        String state = Environment.getExternalStorageState(); // 判断是否存在sd卡
+        if (state.equals(Environment.MEDIA_MOUNTED)) {
+            Log.i("MainActivity:", " 手机SD卡已挂载!");
+
+        } else {
+            Toast.makeText(MainActivity.this, "请检查手机是否有SD卡", Toast.LENGTH_LONG).show();
+        }
+
         mCaptureButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -59,6 +76,7 @@ public class MainActivity extends Activity
                 intent.setComponent(cn);
                 intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 startActivity(intent);
+
             }
         });
 
@@ -78,15 +96,25 @@ public class MainActivity extends Activity
     @Override
     protected void onResume() {
         super.onResume();
-        mProcessingDialog.setMessage("intialize environment...");
-        mProcessingDialog.show();
 
-        threadExist = true;
         mWorkThread = new WorkThread();
         mWorkThread.setPriority(10);
         mWorkThread.start();
 
-        mWorkThread.setMsg(WorkThread.STATE_INIT);
+        File file = getDir("image", Context.MODE_PRIVATE);
+        if (file.isDirectory()) {
+            String[] files = file.list();
+            if (files.length == 6) {
+                mButton.setEnabled(true);
+                mInitOpenGL = true;
+            }
+        }
+        if(mInitOpenGL)
+        {
+            mProcessingDialog.setMessage("intialize environment...");
+            mProcessingDialog.show();
+            mWorkThread.setMsg(WorkThread.STATE_INIT);
+        }
     }
 
     @Override
@@ -104,6 +132,29 @@ public class MainActivity extends Activity
     protected void onDestroy() {
         super.onDestroy();
         mWorkThread.setMsg(WorkThread.STATE_EXIT);
+    }
+
+    public void saveBitmap(Bitmap b)
+    {
+        File parentPath = Environment.getExternalStorageDirectory();
+        String path = parentPath.getAbsolutePath();
+        long currentTime = System.currentTimeMillis();
+        currentTime = currentTime % 1000000;
+        String jpegName = path + "/" + "IMG_" + currentTime +".jpg";
+
+        try {
+            FileOutputStream fout = new FileOutputStream(jpegName);
+            BufferedOutputStream bos = new BufferedOutputStream(fout);
+            b.compress(Bitmap.CompressFormat.JPEG, 100, bos);
+            bos.flush();
+            bos.close();
+            Log.i(TAG, "saveResult success");
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            Log.i(TAG, "saveResult faild");
+            e.printStackTrace();
+        }
+
     }
 
     WorkThread mWorkThread;
@@ -131,16 +182,18 @@ public class MainActivity extends Activity
 
         @Override
         public void run() {
-
+            final File parentPath = getDir("image", Context.MODE_PRIVATE);
             while (msg != STATE_EXIT) {
                 if (msg == STATE_INIT) {
                     mWorkThread.setMsg(WorkThread.STATE_NONE);
-                    addProcess.initOpenGLES();
+
+                    final char[] path = parentPath.getAbsolutePath().toCharArray();
+                    final int length = parentPath.getAbsolutePath().length();
+                    addProcess.initOpenGLES(path,length);
                     MainActivity.this.runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
                             mProcessingDialog.dismiss();
-                            //WorkThread.this.setMsg(STATE_NONE);
                         }
                     });
 
@@ -155,9 +208,10 @@ public class MainActivity extends Activity
                     MainActivity.this.runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            m_Tmpbmp = BitmapFactory.decodeFile("/mnt/obb/Capture/3.jpg");
+                            m_Tmpbmp = BitmapFactory.decodeFile(parentPath.getAbsolutePath() + "/3.jpg");
                             mOriImageView.setImageBitmap(m_Tmpbmp);
                             mImageView.setImageBitmap(mFinalBitmap);    //设置Bitmap
+                            saveBitmap(mFinalBitmap);
                             mTextView.setText(time);
                             mButton.setEnabled(true);
                             mProcessingDialog.dismiss();

@@ -106,7 +106,7 @@ public class CameraInterface {
 		}
 	}
 	
-	public class AutoFocusCallbackimpl implements AutoFocusCallback{  
+	public class AutoFocusCallbackimpl implements AutoFocusCallback{
         public void onAutoFocus(boolean success,Camera camera){
         	Log.v(TAG, "onAutoFocus..." + success);
             if(success){

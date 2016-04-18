@@ -112,8 +112,8 @@ int PerspectiveAdd::Progress(Mat & _outMat)
     workBegin();
     perspectiveAndAdd(HomVec,_outMat);
     workEnd("perspectiveAndAdd");
-    cvtColor(_outMat,_outMat,CV_RGB2BGR);
     //imwrite("/mnt/obb/Capture/gles.jpg",_outMat);
+    cvtColor(_outMat,_outMat,CV_RGB2BGR);
     return 1;
 }
 
@@ -358,6 +358,7 @@ int PerspectiveAdd::perspectiveAndAdd(const vector <fHomography> & HomographyVec
         return -1;
     }
     Mat result(Height, Width, CV_8UC3, mTargetGraphicBufferAddr);
+
     dstImage = result.clone();
     //dstImage = result;
     err = mTargetGraphicBuffer->unlock();
