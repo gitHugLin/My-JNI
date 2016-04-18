@@ -140,8 +140,7 @@ public class MainActivity extends Activity
         String path = parentPath.getAbsolutePath();
         long currentTime = System.currentTimeMillis();
         currentTime = currentTime % 1000000;
-        String jpegName = path + "/" + "IMG_" + currentTime +".jpg";
-
+        String jpegName = path + "/APCamera/" + "IMG_" + currentTime +".jpg";
         try {
             FileOutputStream fout = new FileOutputStream(jpegName);
             BufferedOutputStream bos = new BufferedOutputStream(fout);

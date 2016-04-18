@@ -17,13 +17,13 @@ public class FileUtil {
 			Environment.DIRECTORY_DCIM);*/
 	private static final File parentPath = Environment.getExternalStorageDirectory();
 	private static   String storagePath = "";
-	private static final String DST_FOLDER_NAME = "PlayCamera";
+	private static final String DST_FOLDER_NAME = "/APCamera";
 	private static final String IMAGE_FOLDER_NAME = "image";
 	public final static String DST_FILE = parentPath.getAbsolutePath()+"/" + DST_FOLDER_NAME + "/" + "plate_locate.jpg";
 	private static int picIndex = 0;
 	private static String initPath(){
 		if(storagePath.equals("")){
-			storagePath = parentPath.getAbsolutePath();
+			storagePath = parentPath.getAbsolutePath() + DST_FOLDER_NAME;
 			File f = new File(storagePath);
 			if(!f.exists()){
 				f.mkdir();
@@ -70,13 +70,16 @@ public class FileUtil {
 		Log.i(TAG, "currentPath = " + currentPath);
 
 		if( picIndex == 6) {
+			Log.i("picIndex", "picIndex = " + picIndex);
 			picIndex = 1;
 			copyFolder(currentPath,dstPath);
 		}
 		else
 			picIndex++;
-		String num = "" + picIndex;
-		String jpegName = currentPath + "/" + num + ".jpg";
+		if( picIndex == 6) {
+			copyFolder(currentPath,dstPath);
+		}
+		String jpegName = currentPath + "/" + picIndex + ".jpg";
 		Log.i(TAG, "saveBitmap:jpegName = " + jpegName);
 		try {
 			FileOutputStream fout = new FileOutputStream(jpegName);
@@ -103,8 +106,9 @@ public class FileUtil {
 		try {
 			(new File(newPath)).mkdirs(); //如果文件夹不存在 则建立新文件夹
 			File a = new File(oldPath);
-			String[] file=a.list();
+			String[] file = a.list();
 			File temp=null;
+
 			for (int i = 0; i < file.length; i++) {
 				if(oldPath.endsWith(File.separator)){
 					temp = new File(oldPath+file[i]);
@@ -136,7 +140,7 @@ public class FileUtil {
 			}
 		}
 		catch (Exception e) {
-			System.out.println("复制整个文件夹内容操作出错");
+			Log.i(TAG, "保存文件到相册出错！");
 			e.printStackTrace();
 
 		}
