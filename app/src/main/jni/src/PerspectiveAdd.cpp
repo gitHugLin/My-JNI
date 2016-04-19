@@ -67,12 +67,12 @@ int PerspectiveAdd::Progress(Mat & _outMat)
         assert("Please initOpenGLES first!");
         return 0;
     }
-
+    LOGE("PerspectiveAdd:1");
     vector <HomIntMat> homIntMatVec;
     workBegin();
-    MutGetHomography MTFeature(m_grays);
+    MutGetHomography MTFeature(m_grays);LOGE("PerspectiveAdd:2");
     MTFeature.setMode(HomoMethod);
-    MTFeature.process(homIntMatVec);
+    MTFeature.process(homIntMatVec);LOGE("PerspectiveAdd:3");
     workEnd("MutGetHomography");
 
     fHomography fhom;
@@ -113,7 +113,7 @@ int PerspectiveAdd::Progress(Mat & _outMat)
     perspectiveAndAdd(HomVec,_outMat);
     workEnd("perspectiveAndAdd");
     //imwrite("/mnt/obb/Capture/gles.jpg",_outMat);
-    cvtColor(_outMat,_outMat,CV_RGB2BGR);
+    //cvtColor(_outMat,_outMat,CV_RGB2BGR);
     return 1;
 }
 

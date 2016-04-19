@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #include "include/PerspectiveAdd.h"
 #include <dirent.h>
-
+#include <sys/stat.h>
 
 static double work_begin = 0;
 static double work_end = 0;
@@ -24,16 +24,64 @@ static void workEnd()
     gTime = work_end /((double)getTickFrequency() )* 1000.0;
     LOGE("TIME = %lf ms \n",gTime);
 }
-
+void getImageUnderDir( char *path, char *suffix);
 static vector <Mat> g_picVec;
 static vector <Mat> g_grayVec;
-
 static PerspectiveAdd g_APUnit;
+
+void getImageUnderDir( char *path, char *suffix)
+{
+    struct dirent* ent = NULL;
+    DIR *pDir;
+    char dir[512];
+    char tSuffix[8];
+    struct stat statbuf;
+    if( (pDir = opendir(path)) == NULL )
+    {
+        LOGE("getFileList:Cannot open directory:%s\n", path);
+        return;
+    }
+    while( (ent = readdir(pDir)) != NULL )
+    {
+        //得到读取文件的绝对路径名
+        snprintf( dir, 512,"%s/%s", path, ent->d_name );
+        //得到文件信息
+        lstat(dir, &statbuf);
+        //判断是目录还是文件
+        if( S_ISDIR(statbuf.st_mode) )
+        {
+            //排除当前目录和上级目录
+            if(strcmp( ".",ent->d_name) == 0 || strcmp( "..",ent->d_name) == 0)
+                continue;
+            //如果是子目录,递归调用函数本身,实现子目录中文件遍历
+            //递归调用,遍历子目录中文件
+        } else
+        {
+            //LOGE("后缀名:%s",ent->d_name + strlen(ent->d_name) - strlen(suffix));
+            //排除后缀名不是指定的　suffix 名的文件
+            if(strcmp( suffix,ent->d_name + strlen(ent->d_name) - strlen(suffix)) != 0)
+                continue;
+            Mat bayer,yuv,temp;
+            bayer = imread(dir,0);
+            cvtColor(bayer, temp, COLOR_BayerBG2BGR);
+            //LOGE( "temp.type = %d\n",temp.type() );
+            g_picVec.push_back(temp);
+            cvtColor(temp, yuv, COLOR_BGR2YUV);
+            vector<Mat> YUVchanel;
+            split(yuv, YUVchanel);
+            g_grayVec.push_back(YUVchanel[0]);
+            //LOGE("绝对路径名:%s",dir);
+        }
+    }
+    closedir(pDir);
+}
+
 
 JNIEXPORT void JNICALL initOpenGLES(JNIEnv *env, jobject obj,jcharArray path,jint length)
 {
     g_picVec.clear();
     g_grayVec.clear();
+
     jchar *array;
     char *buf;
     int i;
@@ -52,7 +100,7 @@ JNIEXPORT void JNICALL initOpenGLES(JNIEnv *env, jobject obj,jcharArray path,jin
         //LOGD("buf[%d]=%c\n",i,*(buf+i));
     }
 
-    char picPath[255];
+/*    char picPath[255];
     int nameLength = sizeof("/0.jpg");
     memset(picPath,0,sizeof(picPath));
     memcpy(picPath,buf,length);
@@ -70,12 +118,17 @@ JNIEXPORT void JNICALL initOpenGLES(JNIEnv *env, jobject obj,jcharArray path,jin
             default:break;
         }
         //LOGE("LOGE: path = %s \n",picPath);
-        Mat temp;
+        Mat temp,yuv;
         temp = imread(picPath);
+        //LOGE( "temp.type = %d\n",temp.type());
         g_picVec.push_back(temp);
-        cvtColor(temp,temp,CV_RGB2GRAY);
-        g_grayVec.push_back(temp);
-    }
+        //cvtColor(temp,temp,CV_RGB2GRAY);
+        cvtColor(temp, yuv, COLOR_RGB2YUV);
+        vector<Mat> YUVchanel;
+        split(yuv, YUVchanel);
+        g_grayVec.push_back(YUVchanel[0]);
+    }*/
+    getImageUnderDir("/data/isptune","pgm");
     g_APUnit.initOpenGLES(g_picVec,g_grayVec);
     env->ReleaseCharArrayElements(path, array, 0);//释放资源
     free(buf);//释放内存空间

@@ -39,7 +39,7 @@ bool Format::getYchannel(vector <Mat> &_outImg)
         readPic.read((char*)buf,buffSize);
         readPic.close();
 
-        Mat gray(Size(width, height),CV_8UC1,buf);
+        Mat gray(Size(width, height),CV_8UC1,buf);//CV_16UC1
         Mat out = gray.clone();
         _outImg.push_back(out);
 //        imwrite("Ychannel.jpg",_outImg[i]);

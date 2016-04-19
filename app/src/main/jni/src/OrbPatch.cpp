@@ -68,8 +68,8 @@ void OrbPatch::setPatch(const Point2f _origin,const Mat _queryImage,const Mat _t
 
 void OrbPatch::detectKeypoints(void)
 {
-    assert(qImage.type() == CV_8UC1);
-    assert(tImage.type() == CV_8UC1);
+    assert(qImage.channels() == 1);
+    assert(tImage.channels() == 1);
     qKeypoints.clear();
     tKeypoints.clear();
 #ifndef _SUM_TIME_

@@ -15,7 +15,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
-
+import android.text.TextUtils;
 import com.example.imageview.PinchImageView;
 
 import org.opencv.android.Utils;
@@ -71,12 +71,13 @@ public class MainActivity extends Activity
         mCaptureButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                ComponentName cn = new ComponentName("com.example.linqi.my_jni", "com.example.camera.CameraActivity");
+                deleteFolderFile("/data/isptune",true);
+                ComponentName cn = new ComponentName("com.android.camera2", "com.android.camera.CameraLauncher");
+                //ComponentName cn = new ComponentName("com.example.linqi.my_jni", "com.example.camera.CameraActivity");
                 Intent intent = new Intent();
                 intent.setComponent(cn);
                 intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 startActivity(intent);
-
             }
         });
 
@@ -86,7 +87,6 @@ public class MainActivity extends Activity
                 mProcessingDialog.setMessage("Please wait while processing images...");
                 mProcessingDialog.show();
                 mButton.setEnabled(false);
-
                 mWorkThread.setMsg(WorkThread.STATE_RUN);
             }
         });
@@ -101,7 +101,8 @@ public class MainActivity extends Activity
         mWorkThread.setPriority(10);
         mWorkThread.start();
 
-        File file = getDir("image", Context.MODE_PRIVATE);
+        //File file = getDir("image", Context.MODE_PRIVATE);
+        File file = new File("/data/isptune");
         if (file.isDirectory()) {
             String[] files = file.list();
             if (files.length == 6) {
@@ -134,6 +135,39 @@ public class MainActivity extends Activity
         mWorkThread.setMsg(WorkThread.STATE_EXIT);
     }
 
+
+    /**
+     * 删除指定目录下文件及目录
+     * @param deleteThisPath
+     * @param filepath
+     * @return
+     */
+    public void deleteFolderFile(String filePath, boolean deleteThisPath) {
+        if (!TextUtils.isEmpty(filePath)) {
+            try {
+                File file = new File(filePath);
+                if (file.isDirectory()) {// 处理文件夹
+                    File files[] = file.listFiles();
+                    for (int i = 0; i < files.length; i++) {
+                        deleteFolderFile(files[i].getAbsolutePath(), true);
+                    }
+                }
+                if (deleteThisPath) {
+                    if (file.isFile()) {// 如果是文件，删除
+                        file.delete();
+                    } /*else {//处理文件夹
+                        if (file.listFiles().length == 0) {// 目录下没有文件或者目录，删除
+                            file.delete();
+                        }
+                    }*/
+                }
+            } catch (Exception e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+        }
+    }
+
     public void saveBitmap(Bitmap b)
     {
         File parentPath = Environment.getExternalStorageDirectory();
@@ -150,7 +184,7 @@ public class MainActivity extends Activity
             Log.i(TAG, "saveResult success");
         } catch (IOException e) {
             // TODO Auto-generated catch block
-            Log.i(TAG, "saveResult faild");
+            Log.i(TAG, "saveResult fail!");
             e.printStackTrace();
         }
 
