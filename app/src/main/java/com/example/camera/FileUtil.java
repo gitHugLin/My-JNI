@@ -13,14 +13,14 @@ import java.io.IOException;
 
 public class FileUtil {
 	private static final  String TAG = "FileUtil";
-	/*private static final File parentPath = Environment.getExternalStoragePublicDirectory(
-			Environment.DIRECTORY_DCIM);*/
 	private static final File parentPath = Environment.getExternalStorageDirectory();
 	private static   String storagePath = "";
 	private static final String DST_FOLDER_NAME = "/APCamera";
 	private static final String IMAGE_FOLDER_NAME = "image";
-	public final static String DST_FILE = parentPath.getAbsolutePath()+"/" + DST_FOLDER_NAME + "/" + "plate_locate.jpg";
+	public final static String DST_FILE = parentPath.getAbsolutePath()+"/"
+			+ DST_FOLDER_NAME + "/" + "plate_locate.jpg";
 	private static int picIndex = 0;
+
 	private static String initPath(){
 		if(storagePath.equals("")){
 			storagePath = parentPath.getAbsolutePath() + DST_FOLDER_NAME;
@@ -107,7 +107,7 @@ public class FileUtil {
 			(new File(newPath)).mkdirs(); //如果文件夹不存在 则建立新文件夹
 			File a = new File(oldPath);
 			String[] file = a.list();
-			File temp=null;
+			File temp = null;
 
 			for (int i = 0; i < file.length; i++) {
 				if(oldPath.endsWith(File.separator)){
