@@ -31,6 +31,7 @@ static PerspectiveAdd g_APUnit;
 
 void getImageUnderDir( char *path, char *suffix)
 {
+    Mat outRGB,outYUV;
     struct dirent* ent = NULL;
     DIR *pDir;
     char dir[512];
@@ -61,16 +62,21 @@ void getImageUnderDir( char *path, char *suffix)
             //排除后缀名不是指定的　suffix 名的文件
             if(strcmp( suffix,ent->d_name + strlen(ent->d_name) - strlen(suffix)) != 0)
                 continue;
-            Mat bayer,yuv,temp;
+            Mat bayer,yuv,rgb,yv12;
             bayer = imread(dir,0);
-            cvtColor(bayer, temp, COLOR_BayerBG2BGR);
-            //LOGE( "temp.type = %d\n",temp.type() );
-            g_picVec.push_back(temp);
-            cvtColor(temp, yuv, COLOR_BGR2YUV);
+            cvtColor(bayer, rgb, CV_BayerBG2BGR);
+            cvtColor(rgb, yv12, COLOR_BGR2YUV_YV12);
+            cvtColor(rgb, yuv, COLOR_BGR2YUV);
+            //LOGE("yuv.width = %d,yuv.height = %d",yuv.size().width,yuv.size().height);
+            //LOGE("yuv.channels = %d",yuv.channels());
+            g_picVec.push_back(yv12);
             vector<Mat> YUVchanel;
+            YUVchanel.clear();
             split(yuv, YUVchanel);
             g_grayVec.push_back(YUVchanel[0]);
-            //LOGE("绝对路径名:%s",dir);
+            LOGE("YUVchanel[0].width = %d,YUVchanel[0].heigh = %d",YUVchanel[0].cols,YUVchanel[0].rows);
+            //LOGE("YUVchanel[0].channels = %d",YUVchanel[0].channels());
+            LOGE("绝对路径名:%s",dir);
         }
     }
     closedir(pDir);

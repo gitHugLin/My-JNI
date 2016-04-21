@@ -67,12 +67,12 @@ int PerspectiveAdd::Progress(Mat & _outMat)
         assert("Please initOpenGLES first!");
         return 0;
     }
-    LOGE("PerspectiveAdd:1");
+
     vector <HomIntMat> homIntMatVec;
     workBegin();
-    MutGetHomography MTFeature(m_grays);LOGE("PerspectiveAdd:2");
+    MutGetHomography MTFeature(m_grays);
     MTFeature.setMode(HomoMethod);
-    MTFeature.process(homIntMatVec);LOGE("PerspectiveAdd:3");
+    MTFeature.process(homIntMatVec);
     workEnd("MutGetHomography");
 
     fHomography fhom;
@@ -112,7 +112,11 @@ int PerspectiveAdd::Progress(Mat & _outMat)
     workBegin();
     perspectiveAndAdd(HomVec,_outMat);
     workEnd("perspectiveAndAdd");
-    //imwrite("/mnt/obb/Capture/gles.jpg",_outMat);
+/*    bool ret = imwrite("/mnt/obb/Capture/gles.jpg",m_images[3]);
+    if(!ret)
+        LOGE("SAVED GLES.JPG FAIL!");
+    else
+        LOGE("GLES.JPG HAS BEEN SAVED!");*/
     //cvtColor(_outMat,_outMat,CV_RGB2BGR);
     return 1;
 }
@@ -127,8 +131,8 @@ int PerspectiveAdd::initOpenGLES(const vector <Mat> & images,const vector <Mat> 
         m_images.push_back(images[i]);
         m_grays.push_back(grays[i]);
     }
-    Width = images[0].size().width;
-    Height = images[0].size().height;
+    Width = m_grays[0].size().width;
+    Height = m_grays[0].size().height;
 
     const char gPerspectiveVertexShader[] =
             "attribute vec4 a_position;\n"
@@ -237,20 +241,20 @@ int PerspectiveAdd::initOpenGLES(const vector <Mat> & images,const vector <Mat> 
     glGenTextures(1, &textureID5);
     glGenTextures(1, &textureID6);
 
-    createEGLImageTexture(textureID1, 0 , NULL, Width, Height, 3);
-    createEGLImageTexture(textureID2, 1 , NULL, Width, Height, 3);
-    createEGLImageTexture(textureID3, 2 , NULL, Width, Height, 3);
-    createEGLImageTexture(textureID4, 3 , NULL, Width, Height, 3);
-    createEGLImageTexture(textureID5, 4 , NULL, Width, Height, 3);
-    createEGLImageTexture(textureID6, 5 , NULL, Width, Height, 3);
+    createEGLImageTexture( textureID1, 0 , NULL, Width, Height );
+    createEGLImageTexture( textureID2, 1 , NULL, Width, Height );
+    createEGLImageTexture( textureID3, 2 , NULL, Width, Height );
+    createEGLImageTexture( textureID4, 3 , NULL, Width, Height );
+    createEGLImageTexture( textureID5, 4 , NULL, Width, Height );
+    createEGLImageTexture( textureID6, 5 , NULL, Width, Height );
 
     //the third frame is the standard frame,we set it ID for textureID0
-    updateEGLImageTexture(textureID1, 0, Width, Height, m_images[2].data);
-    updateEGLImageTexture(textureID2, 1, Width, Height, m_images[0].data);
-    updateEGLImageTexture(textureID3, 2, Width, Height, m_images[1].data);
-    updateEGLImageTexture(textureID4, 3, Width, Height, m_images[3].data);
-    updateEGLImageTexture(textureID5, 4, Width, Height, m_images[4].data);
-    updateEGLImageTexture(textureID6, 5, Width, Height, m_images[5].data);
+    updateEGLImageTexture( textureID1, 0, Width, Height, m_images[2].data );
+    updateEGLImageTexture( textureID2, 1, Width, Height, m_images[0].data );
+    updateEGLImageTexture( textureID3, 2, Width, Height, m_images[1].data );
+    updateEGLImageTexture( textureID4, 3, Width, Height, m_images[3].data );
+    updateEGLImageTexture( textureID5, 4, Width, Height, m_images[4].data );
+    updateEGLImageTexture( textureID6, 5, Width, Height, m_images[5].data );
 
     float gSize[2] = {Width,Height};
     glUniform2fv(vSizeHandle,1,gSize);
@@ -294,8 +298,6 @@ void PerspectiveAdd::initializeTmpResEGLImage(int fboWidth, int fboHeight, GLuin
 //render in here
 int PerspectiveAdd::perspectiveAndAdd(const vector <fHomography> & HomographyVec, Mat &dstImage)
 {
-
-    //LOGE("Time of perspectiveAndAdd");
     //workBegin();
     glUniformMatrix3fv(vHomograyHandle1,1,GL_FALSE,HomographyVec[0].Homography);
     glUniformMatrix3fv(vHomograyHandle2,1,GL_FALSE,HomographyVec[1].Homography);
@@ -610,31 +612,17 @@ GLuint PerspectiveAdd::createSimpleTexture2D(GLuint _textureid, GLint _textureIn
 }
 
 GLuint PerspectiveAdd::createEGLImageTexture(GLuint _textureid, GLint _textureIndex ,GLubyte* pixels,
-                                       int width, int height, int channels)
+                                       int width, int height )
 {
     workBegin();
-
-    GLenum format;
-    switch (channels) {
-        case 3:
-            format = GL_RGB;
-            break;
-        case 1:
-            format = GL_LUMINANCE;
-            break;
-        case 4:
-            format = GL_RGBA;
-            break;
-    }
-
-    mGraphicBuffer[_textureIndex] = new GraphicBuffer(width, height, HAL_PIXEL_FORMAT_RGB_888,
+    //HAL_PIXEL_FORMAT_YCrCb_420_SP; HAL_PIXEL_FORMAT_RGB_888 ;HAL_PIXEL_FORMAT_YV12
+    mGraphicBuffer[_textureIndex] = new GraphicBuffer(width, height, HAL_PIXEL_FORMAT_YV12,
                                                       GraphicBuffer::USAGE_HW_TEXTURE);// | GraphicBuffer::USAGE_SW_WRITE_RARELY);
 
     EGLClientBuffer clientBuffer = (EGLClientBuffer) mGraphicBuffer[_textureIndex] ->getNativeBuffer();
     mEGLImage[_textureIndex] = eglCreateImageKHR(display, EGL_NO_CONTEXT, EGL_NATIVE_BUFFER_ANDROID,
                                                  clientBuffer, 0);
     workEnd("TEX EGL");
-
     // Bind the texture
     switch (_textureIndex) {
         case 0:
@@ -672,25 +660,21 @@ GLuint PerspectiveAdd::createEGLImageTexture(GLuint _textureid, GLint _textureIn
 GLuint PerspectiveAdd::updateEGLImageTexture(GLuint _textureid, int _textureIndex, int width, int height, GLubyte* pixels)
 {
     LOGD("updateEGLImageTexture, index=%d, w-h: %d-%d, pixels:%.8x", _textureIndex, width, height, pixels);
-    //if (mGraphicBufferAddr[_textureIndex] == NULL)
-    {
-        int err = mGraphicBuffer[_textureIndex]->lock(GRALLOC_USAGE_SW_WRITE_RARELY,
-                                                      (void **) (&mGraphicBufferAddr[_textureIndex]));
-        if (err != 0 || mGraphicBufferAddr[_textureIndex] == NULL) {
-            LOGD("mYUVTexBuffer->lock(...) failed: %d\n", err);
-            return -1;
-        }
-        memcpy(mGraphicBufferAddr[_textureIndex], pixels, width * height * 3);
 
-        err = mGraphicBuffer[_textureIndex]->unlock();
-        if (err != 0) {
-            LOGD("mYUVTexBuffer->unlock() failed: %d\n", err);
-            return -1;
-        }
+    int err = mGraphicBuffer[_textureIndex]->lock(GRALLOC_USAGE_SW_WRITE_RARELY,
+                                                  (void **) (&mGraphicBufferAddr[_textureIndex]));
+    if (err != 0 || mGraphicBufferAddr[_textureIndex] == NULL) {
+        LOGD("mYUVTexBuffer->lock(...) failed: %d\n", err);
+        return -1;
     }
-    /*else {
-        memcpy(mGraphicBufferAddr, pixels, width * height * 3);
-    }*/
+    memcpy(mGraphicBufferAddr[_textureIndex], pixels, width * height * 1.5);
+
+    err = mGraphicBuffer[_textureIndex]->unlock();
+    if (err != 0) {
+        LOGD("mYUVTexBuffer->unlock() failed: %d\n", err);
+        return -1;
+    }
+
     glBindTexture(GL_TEXTURE_2D, _textureid);
     glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, (GLeglImageOES)mEGLImage[_textureIndex]);
 

@@ -96,7 +96,7 @@ private:
     void initializeTmpResEGLImage(int fboWidth, int fboHeight, GLuint *tex,
                                   GLuint * fbo, GLuint texGroup);
     GLuint createEGLImageTexture(GLuint _textureid, GLint _textureIndex ,GLubyte* pixels,
-                                 int width, int height, int channels);
+                                 int width, int height );
     GLuint updateEGLImageTexture(GLuint _textureid, int _textureIndex, int width, int height, GLubyte* pixels);
 };
 
