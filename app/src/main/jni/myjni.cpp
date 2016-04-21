@@ -31,7 +31,7 @@ static PerspectiveAdd g_APUnit;
 
 void getImageUnderDir( char *path, char *suffix)
 {
-    Mat outRGB,outYUV;
+    int i = 0;
     struct dirent* ent = NULL;
     DIR *pDir;
     char dir[512];
@@ -65,6 +65,14 @@ void getImageUnderDir( char *path, char *suffix)
             bayer = imread(dir,0);
             cvtColor(bayer, rgb, CV_BayerBG2BGR);
             g_picVec.push_back(rgb);
+            i++;
+            if(i == 3)
+            {
+                vector<int> compression_params;
+                compression_params.push_back(CV_IMWRITE_PNG_COMPRESSION);
+                compression_params.push_back(3);
+                imwrite("/data/isptune/src.png", rgb, compression_params);
+            }
             //cvtColor(rgb, yv12, COLOR_BGR2YUV_YV12);
             cvtColor(rgb, yuv, COLOR_BGR2YUV);
             vector<Mat> YUVchanel;
@@ -74,6 +82,7 @@ void getImageUnderDir( char *path, char *suffix)
             LOGE("绝对路径名:%s",dir);
         }
     }
+
     closedir(pDir);
 }
 
