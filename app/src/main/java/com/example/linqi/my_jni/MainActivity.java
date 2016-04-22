@@ -63,6 +63,12 @@ public class MainActivity extends Activity
         String state = Environment.getExternalStorageState(); // 判断是否存在sd卡
         if (state.equals(Environment.MEDIA_MOUNTED)) {
             Log.i("MainActivity:", " 手机SD卡已挂载!");
+            File parentPath = Environment.getExternalStorageDirectory();
+            String storagePath = parentPath.getAbsolutePath() + "/APCamera/";
+            File f = new File(storagePath);
+            if(!f.exists()){
+                f.mkdir();
+            }
 
         } else {
             Toast.makeText(MainActivity.this, "请检查手机是否有SD卡", Toast.LENGTH_LONG).show();
@@ -220,8 +226,9 @@ public class MainActivity extends Activity
                 if (msg == STATE_INIT) {
                     mWorkThread.setMsg(WorkThread.STATE_NONE);
 
-                    final char[] path = parentPath.getAbsolutePath().toCharArray();
-                    final int length = parentPath.getAbsolutePath().length();
+                    String dstPath = parentPath.getAbsolutePath() + "/src.png";
+                    final char[] path = dstPath.toCharArray();
+                    final int length = dstPath.length();
                     addProcess.initOpenGLES(path,length);
                     MainActivity.this.runOnUiThread(new Runnable() {
                         @Override
@@ -242,8 +249,8 @@ public class MainActivity extends Activity
                         @Override
                         public void run() {
 
-                            m_Tmpbmp = BitmapFactory.decodeFile("/data/isptune/src.png");
-                            //m_Tmpbmp = BitmapFactory.decodeFile(parentPath.getAbsolutePath() + "/3.jpg");
+                            //m_Tmpbmp = BitmapFactory.decodeFile("/data/isptune/src.png");
+                            m_Tmpbmp = BitmapFactory.decodeFile(parentPath.getAbsolutePath() + "/src.png");
                             mOriImageView.setImageBitmap(m_Tmpbmp);
                             mImageView.setImageBitmap(mFinalBitmap);    //设置Bitmap
                             saveBitmap(mFinalBitmap);

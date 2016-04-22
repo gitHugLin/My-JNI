@@ -29,7 +29,7 @@ static vector <Mat> g_picVec;
 static vector <Mat> g_grayVec;
 static PerspectiveAdd g_APUnit;
 
-void getImageUnderDir( char *path, char *suffix)
+void getImageUnderDir( const char *path, const char *suffix,const char *dstPath)
 {
     int i = 0;
     struct dirent* ent = NULL;
@@ -61,25 +61,31 @@ void getImageUnderDir( char *path, char *suffix)
             //排除后缀名不是指定的　suffix 名的文件
             if(strcmp( suffix,ent->d_name + strlen(ent->d_name) - strlen(suffix)) != 0)
                 continue;
-            Mat bayer,yuv,rgb,yv12;
+            LOGE("绝对路径名:%s",dir);
+
+            Mat bayer,rgb,yv12;
             bayer = imread(dir,0);
-            cvtColor(bayer, rgb, CV_BayerBG2BGR);
+            cvtColor(bayer, rgb, CV_BayerBG2RGB);
+            cvtColor(rgb, yv12, COLOR_RGB2YUV_YV12);
             g_picVec.push_back(rgb);
+            Mat Ychannel(rgb.rows, rgb.cols, yv12.type(), yv12.data);
+            g_grayVec.push_back(Ychannel.clone());
+
             i++;
             if(i == 3)
             {
+                int name = getTickCount();
+                char c[32];
+                sprintf(c, "%05X", name);
+                string path = "/mnt/internal_sd/APCamera/";
+                string b = ".png";
+                string fileName = path + c + b;
                 vector<int> compression_params;
-                compression_params.push_back(CV_IMWRITE_PNG_COMPRESSION);
-                compression_params.push_back(3);
-                imwrite("/data/isptune/src.png", rgb, compression_params);
+                compression_params.push_back(IMWRITE_PNG_COMPRESSION);
+                compression_params.push_back(0);
+                imwrite(fileName, rgb, compression_params);
+                imwrite(dstPath, rgb, compression_params);
             }
-            //cvtColor(rgb, yv12, COLOR_BGR2YUV_YV12);
-            cvtColor(rgb, yuv, COLOR_BGR2YUV);
-            vector<Mat> YUVchanel;
-            YUVchanel.clear();
-            split(yuv, YUVchanel);
-            g_grayVec.push_back(YUVchanel[0]);
-            LOGE("绝对路径名:%s",dir);
         }
     }
 
@@ -137,7 +143,9 @@ JNIEXPORT void JNICALL initOpenGLES(JNIEnv *env, jobject obj,jcharArray path,jin
         split(yuv, YUVchanel);
         g_grayVec.push_back(YUVchanel[0]);
     }*/
-    getImageUnderDir("/data/isptune","pgm");
+    const char dir[] = "/data/isptune";
+    const char suffix[] = "pgm";
+    getImageUnderDir(dir,suffix,buf);
     g_APUnit.initOpenGLES(g_picVec,g_grayVec);
     env->ReleaseCharArrayElements(path, array, 0);//释放资源
     free(buf);//释放内存空间

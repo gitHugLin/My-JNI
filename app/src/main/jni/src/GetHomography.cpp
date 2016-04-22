@@ -16,8 +16,8 @@ GetHomography::GetHomography(Mat& srcImage,Mat& dstImage)
     pthread_mutex_init( &g_mutex, NULL );
     if(!srcImage.empty() || !dstImage.empty())
         assert("Error in Homography: input image can not be empty!");
-    assert(srcImage.type() == CV_8UC1);
-    assert(dstImage.type() == CV_8UC1);
+    assert(srcImage.channels() == 1);
+    assert(dstImage.channels() == 1);
 
     if(srcImage.size().width*srcImage.size().height < 5500000)
         m_patch.createPatch(15,2,16,21);
