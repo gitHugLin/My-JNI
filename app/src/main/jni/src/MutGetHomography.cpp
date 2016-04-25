@@ -5,19 +5,20 @@
 #include "include/MutGetHomography.h"
 
 
-
-MutGetHomography::MutGetHomography(const vector <Mat> & images)
+MutGetHomography::MutGetHomography( Mat* images)
+//MutGetHomography::MutGetHomography(const vector <Mat> & images)
 {
-    if(images.size() != 6)
-        assert("Error in MutilThread: please input six images!");
-    m_images.clear();
+    //if(images.size() != 6)
+        //assert("Error in MutilThread: please input six images!");
+    //m_images.clear();
     m_homographys.clear();
 
     sem_init(&sem_id, 0, 0);
     pthread_mutex_init( &g_mutex, NULL );
-    for(size_t i = 0; i < images.size(); i++)
+    for(size_t i = 0; i < 6; i++)
     {
-        m_images.push_back(images[i]);
+        m_images[i] = images[i];
+        //m_images.push_back(images[i]);
     }
 
     Width = m_images[0].size().width;

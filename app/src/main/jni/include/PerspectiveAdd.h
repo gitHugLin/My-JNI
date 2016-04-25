@@ -35,13 +35,16 @@ public:
     ~PerspectiveAdd();
 
 public:
-    int initOpenGLES(const vector <Mat> & images,const vector <Mat> & grays);
+    //int initOpenGLES(const vector <Mat> & images,const vector <Mat> & grays);
+    int initOpenGLES(Mat *images,Mat *grays);
     int Progress(Mat & _outMat);
     bool setMode(int homoMethod = RANSAC);
     int perspectiveAndAdd(const vector <fHomography> & HomographyVec, Mat &dstImage);
 private:
-    vector <Mat> m_images;
-    vector <Mat> m_grays;
+
+    Mat m_images[6];
+    Mat m_grays[6];
+
     double work_begin;
     double work_end;
     unsigned char *gData;

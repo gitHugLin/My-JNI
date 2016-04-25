@@ -226,7 +226,7 @@ public class MainActivity extends Activity
                 if (msg == STATE_INIT) {
                     mWorkThread.setMsg(WorkThread.STATE_NONE);
 
-                    String dstPath = parentPath.getAbsolutePath() + "/src.png";
+                    String dstPath = parentPath.getAbsolutePath() + "/src.jpg";
                     final char[] path = dstPath.toCharArray();
                     final int length = dstPath.length();
                     addProcess.initOpenGLES(path,length);
@@ -250,7 +250,7 @@ public class MainActivity extends Activity
                         public void run() {
 
                             //m_Tmpbmp = BitmapFactory.decodeFile("/data/isptune/src.png");
-                            m_Tmpbmp = BitmapFactory.decodeFile(parentPath.getAbsolutePath() + "/src.png");
+                            m_Tmpbmp = BitmapFactory.decodeFile(parentPath.getAbsolutePath() + "/src.jpg");
                             mOriImageView.setImageBitmap(m_Tmpbmp);
                             mImageView.setImageBitmap(mFinalBitmap);    //设置Bitmap
                             saveBitmap(mFinalBitmap);

@@ -24,12 +24,12 @@ static void workEnd()
     gTime = work_end /((double)getTickFrequency() )* 1000.0;
     LOGE("TIME = %lf ms \n",gTime);
 }
-void getImageUnderDir( char *path, char *suffix);
-static vector <Mat> g_picVec;
-static vector <Mat> g_grayVec;
-static PerspectiveAdd g_APUnit;
+static void getImageUnderDir( char *path, char *suffix);
+static Mat g_picVec[6];
+static Mat g_grayVec[6];
+PerspectiveAdd g_APUnit;
 
-void getImageUnderDir( const char *path, const char *suffix,const char *dstPath)
+static void getImageUnderDir( const char *path, const char *suffix,const char *dstPath)
 {
     int i = 0;
     struct dirent* ent = NULL;
@@ -63,13 +63,16 @@ void getImageUnderDir( const char *path, const char *suffix,const char *dstPath)
                 continue;
             LOGE("绝对路径名:%s",dir);
 
-            Mat bayer,rgb,yv12;
-            bayer = imread(dir,0);
-            cvtColor(bayer, rgb, CV_BayerBG2RGB);
+            Mat rgb,yv12;
+            Mat bayer = imread(dir,0);
+            cvtColor(bayer, g_picVec[i], CV_BayerBG2RGB);
+            rgb = g_picVec[i];
             cvtColor(rgb, yv12, COLOR_RGB2YUV_YV12);
-            g_picVec.push_back(rgb);
+            //矩阵构造函数传入data参数不分配矩阵数据，它们只是初始化矩阵头指向指定的数据
             Mat Ychannel(rgb.rows, rgb.cols, yv12.type(), yv12.data);
-            g_grayVec.push_back(Ychannel.clone());
+            //引用计数加１
+            //Ychannel.addref();
+            g_grayVec[i] = Ychannel.clone();
 
             i++;
             if(i == 3)
@@ -78,11 +81,11 @@ void getImageUnderDir( const char *path, const char *suffix,const char *dstPath)
                 char c[32];
                 sprintf(c, "%05X", name);
                 string path = "/mnt/internal_sd/APCamera/";
-                string b = ".png";
+                string b = ".jpg";
                 string fileName = path + c + b;
                 vector<int> compression_params;
-                compression_params.push_back(IMWRITE_PNG_COMPRESSION);
-                compression_params.push_back(0);
+                compression_params.push_back(IMWRITE_JPEG_QUALITY);
+                compression_params.push_back(100);
                 imwrite(fileName, rgb, compression_params);
                 imwrite(dstPath, rgb, compression_params);
             }
@@ -95,20 +98,19 @@ void getImageUnderDir( const char *path, const char *suffix,const char *dstPath)
 
 JNIEXPORT void JNICALL initOpenGLES(JNIEnv *env, jobject obj,jcharArray path,jint length)
 {
-    g_picVec.clear();
-    g_grayVec.clear();
-
-    jchar *array;
-    char *buf;
+    jchar *array = NULL;
+    char buf[255];
     int i;
     array = env->GetCharArrayElements( path, NULL);//复制数组元素到array内存空间
     if(array == NULL){
         LOGE("initOpenGLES: GetCharArrayElements error.");
     }
-    buf = (char *)calloc(length , sizeof(char));
+
+    memset(buf,0,length*sizeof(char));
     //开辟jboolean类型的内存空间，jboolean对应的c++类型为unsigned char
     if(buf == NULL){
         LOGE("initOpenGLES: calloc error.");
+        return ;
     }
     for(i=0; i < length; i++){
         //把jcharArray的数据元素复制到buf所指的内存空间
@@ -116,41 +118,15 @@ JNIEXPORT void JNICALL initOpenGLES(JNIEnv *env, jobject obj,jcharArray path,jin
         //LOGD("buf[%d]=%c\n",i,*(buf+i));
     }
 
-/*    char picPath[255];
-    int nameLength = sizeof("/0.jpg");
-    memset(picPath,0,sizeof(picPath));
-    memcpy(picPath,buf,length);
-    for(int i = 0; i < 6; i++)
-    {
-        switch(i)
-        {
-            case 0:memcpy(picPath+length,"/1.jpg",nameLength);break;
-            case 1:memcpy(picPath+length,"/2.jpg",nameLength);break;
-            case 2:memcpy(picPath+length,"/3.jpg",nameLength);break;
-            case 3:memcpy(picPath+length,"/4.jpg",nameLength);break;
-            case 4:memcpy(picPath+length,"/5.jpg",nameLength);break;
-            case 5:memcpy(picPath+length,"/6.jpg",nameLength);break;
-            default:break;
-        }
-        //LOGE("LOGE: path = %s \n",picPath);
-        Mat temp,yuv;
-        temp = imread(picPath);
-        //LOGE( "temp.type = %d\n",temp.type());
-        g_picVec.push_back(temp);
-        //cvtColor(temp,temp,CV_RGB2GRAY);
-        cvtColor(temp, yuv, COLOR_RGB2YUV);
-        vector<Mat> YUVchanel;
-        split(yuv, YUVchanel);
-        g_grayVec.push_back(YUVchanel[0]);
-    }*/
     const char dir[] = "/data/isptune";
     const char suffix[] = "pgm";
     getImageUnderDir(dir,suffix,buf);
     g_APUnit.initOpenGLES(g_picVec,g_grayVec);
     env->ReleaseCharArrayElements(path, array, 0);//释放资源
-    free(buf);//释放内存空间
-    buf = NULL;
+    return ;
 }
+
+
 JNIEXPORT jlong JNICALL processing(JNIEnv *env, jobject obj)
 {
     jfieldID  nameFieldId ;

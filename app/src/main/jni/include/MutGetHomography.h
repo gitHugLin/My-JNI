@@ -19,7 +19,8 @@ class MutGetHomography: public MyThread
 {
 
 public:
-    MutGetHomography(const vector <Mat> & images);
+    //MutGetHomography(const vector <Mat> & images);
+    MutGetHomography( Mat* images);
     ~MutGetHomography();
 public:
     void process(vector <HomIntMat> & HomVec);
@@ -43,7 +44,8 @@ private:
     int64 work_begin;
     int64 work_end;
     vector <HomIntMat> m_homographys;
-    vector <Mat> m_images;
+    //vector <Mat> m_images;
+    Mat m_images[6];
 private:
     pthread_mutex_t g_mutex;
     sem_t sem_id;

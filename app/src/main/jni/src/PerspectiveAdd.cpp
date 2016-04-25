@@ -11,6 +11,7 @@ PerspectiveAdd::PerspectiveAdd()
     work_begin = 0;
     work_end = 0;
     checkInitOpenGLES = false;
+
     //initOpenGLES();
 }
 
@@ -109,24 +110,24 @@ int PerspectiveAdd::Progress(Mat & _outMat)
             }
         }
     }
-    workBegin();
+    //workBegin();
     perspectiveAndAdd(HomVec,_outMat);
-    workEnd("perspectiveAndAdd");
+    //workEnd("perspectiveAndAdd");
     //imwrite("/mnt/obb/Capture/gles.jpg",_outMat);
     cvtColor(_outMat,_outMat,CV_RGB2BGR);
     return 1;
 }
 
-int PerspectiveAdd::initOpenGLES(const vector <Mat> & images,const vector <Mat> & grays)
+int PerspectiveAdd::initOpenGLES(Mat *images,Mat *grays)
 {
     checkInitOpenGLES = true;
-    m_images.clear();
-    m_grays.clear();
-    for(size_t i = 0; i < images.size(); i++)
+
+    for(size_t i = 0; i < 6; i++)
     {
-        m_images.push_back(images[i]);
-        m_grays.push_back(grays[i]);
+        m_images[i] = images[i];
+        m_grays[i] = grays[i];
     }
+
     Width = images[0].size().width;
     Height = images[0].size().height;
 
