@@ -70,8 +70,6 @@ static void getImageUnderDir( const char *path, const char *suffix,const char *d
             cvtColor(rgb, yv12, COLOR_RGB2YUV_YV12);
             //矩阵构造函数传入data参数不分配矩阵数据，它们只是初始化矩阵头指向指定的数据
             Mat Ychannel(rgb.rows, rgb.cols, yv12.type(), yv12.data);
-            //引用计数加１
-            //Ychannel.addref();
             g_grayVec[i] = Ychannel.clone();
 
             i++;

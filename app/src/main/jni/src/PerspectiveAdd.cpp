@@ -106,6 +106,7 @@ int PerspectiveAdd::Progress(Mat & _outMat)
                 /* memcpy(fhom.Homography,prtHomography, sizeof(prtHomography));
                HomVec.push_back(fhom);*/
                 _outMat = m_images[3];
+                cvtColor(_outMat, _outMat, CV_BGR2RGB);
                 return -1;
             }
         }
